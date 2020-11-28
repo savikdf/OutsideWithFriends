@@ -9,7 +9,7 @@ public class PlayerUIController : MonoBehaviour
 
 
     public void SetSprintCircle(float percentage) {
-        sprintCircle.fillAmount = percentage;
+        sprintCircle.fillAmount = 0.5f * percentage;
     }
 
 

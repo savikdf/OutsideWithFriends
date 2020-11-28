@@ -39,22 +39,27 @@ public class FirstPersonController : MonoBehaviour
 
     #region Sprinting Vars
 
-    private float sprintTimeMax = 15;
-    private float sprintTimeMin = 1;
-    private float sprintTimer = 0f;
-    private bool canSprint {
-        get { 
-            return sprintTimer <= sprintTimeMax;
-        }
-    }
-
     private IEnumerator sprintintCoroutine;
-    private float sprintModifier = 2.5f;
+
+    //timers / don't touchers
+    private float sprintTimer = 0f;
+    private float sprintChargeTimer = 0f;
     private float originalFOV;
-    private float FOVSprintModifier = 1.5f;
+
+    //comparers
+    private float sprintTimeMax = 15;
+    private float sprintTimeMin = 1;    
+    private float sprintRechargeDelay = 1.6f;
     private float FOVInAdjustTime = .5f;
     private float FOVOutAdjustTime = .2f;
-    private bool shouldSprint = false;
+
+    //modifiers
+    private float sprintSpeedModifier = 2.5f;
+    private float sprintRechargeModifier = 2f;
+    private float FOVSprintModifier = 1.5f;
+
+    //inputs
+    private bool sprintHit = false;
     private bool isSprinting = false;
     
     #endregion
@@ -71,19 +76,8 @@ public class FirstPersonController : MonoBehaviour
     private bool canLook = true;
     private bool canMove = true;  
 
-    void OnDrawGizmos()
-    {
-        Gizmos.color = Color.yellow;
-        foreach(Ray r in groundedRays)
-        {
-            Gizmos.DrawRay(r);
-        }
-    }
 
     #endregion
-
-    //Look
-
 
     public FirstPersonController()
     {
@@ -117,23 +111,23 @@ public class FirstPersonController : MonoBehaviour
         {
             float forwardInput = Input.GetAxis("Forward") * currentForwardSpeed;
             float strafeInput = Input.GetAxis("Sideways") * currentStrafeSpeed;
-            shouldSprint = Input.GetKey(KeyCode.LeftShift);
+            sprintHit = Input.GetKeyDown(KeyCode.LeftShift);
 
-            if (Input.GetAxisRaw("Forward") > 0) {
-                //Sprint check
-                if (shouldSprint && !isSprinting)
+            #region Sprint Logic
+
+            if (Input.GetAxisRaw("Forward") > 0)
+            {                
+                if (!isSprinting && sprintHit)
                 {
+                    //begin sprint
                     isSprinting = true;
+                    sprintChargeTimer = 0f;
                     StartCameraFOVLerp(1);
                 }
-
-                if (isSprinting && canSprint)
+                else if (isSprinting && sprintHit)
                 {
-                    sprintTimer += Time.deltaTime;
-                    forwardInput = forwardInput * sprintModifier;
-                }
-                else
-                {
+                    //stop sprint
+                    sprintChargeTimer = 0f;
                     isSprinting = false;
                 }
             }
@@ -141,13 +135,31 @@ public class FirstPersonController : MonoBehaviour
             {
                 isSprinting = false;
             }
-            if(!isSprinting)
+
+            if (isSprinting && sprintTimer <= sprintTimeMax)
             {
+                //handle sprinting
+                isSprinting = true;
+                sprintTimer += Time.deltaTime;
+                sprintChargeTimer = 0f;
+                forwardInput = forwardInput * sprintSpeedModifier;
+            }
+            if (!isSprinting || sprintTimer > sprintTimeMax)
+            {
+                //handle not sprinting
                 isSprinting = false;
-                sprintTimer = Mathf.Max(0f, sprintTimer - Time.deltaTime);
+                sprintChargeTimer += Time.deltaTime;
+                if (sprintChargeTimer >= sprintRechargeDelay)
+                {
+                    sprintTimer = Mathf.Max(0, sprintTimer - (Time.deltaTime * sprintRechargeModifier));
+                }
                 StartCameraFOVLerp(-1);
             }
+
+            //sprint circle
             uiController.SetSprintCircle(1 - (sprintTimer / sprintTimeMax));
+
+            #endregion
 
             movementVec = transform.rotation * new Vector3(strafeInput, verticalVelocity, forwardInput);
             charCon.Move(movementVec * Time.deltaTime);
@@ -257,12 +269,21 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+
     void OnGUI()
     {
-        string text = sprintTimer.ToString();
-        GUILayout.Label(text);
-        GUILayout.Label(text);
-
-
+        GUILayout.Label(sprintChargeTimer.ToString());
+        GUILayout.Label(sprintChargeTimer.ToString());
     }
+
+    void OnDrawGizmos()
+    {
+        //ground check rays
+        Gizmos.color = Color.yellow;
+        foreach (Ray r in groundedRays)
+        {
+            Gizmos.DrawRay(r);
+        }
+    }
+
 }
