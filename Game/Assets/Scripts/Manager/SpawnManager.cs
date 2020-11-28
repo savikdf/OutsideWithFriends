@@ -26,6 +26,10 @@ public class SpawnManager : MonoBehaviour, IManager, ISpawnManager
     {
         Debug.Log($"Initializing {GetType().Name}.");
 
+        //wipe all existing players for a fresh spawn
+        List<Player> playersInScene = FindObjectsOfType<Player>().ToList();
+        playersInScene?.ForEach(p => Destroy(p.gameObject));
+
         spawn = FindObjectOfType<Spawn>();
         GameObject temp = Player;
         SpawnPlayer(0);
