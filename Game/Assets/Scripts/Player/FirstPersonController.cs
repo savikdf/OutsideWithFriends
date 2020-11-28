@@ -269,11 +269,14 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+    public Vector3 GetMoveVector(){
+        return movementVec;
+    }
 
     void OnGUI()
     {
-        GUILayout.Label(sprintChargeTimer.ToString());
-        GUILayout.Label(sprintChargeTimer.ToString());
+        //GUILayout.Label(sprintChargeTimer.ToString());
+        //GUILayout.Label(sprintChargeTimer.ToString());
     }
 
     void OnDrawGizmos()

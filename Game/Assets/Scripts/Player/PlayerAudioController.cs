@@ -23,7 +23,7 @@ public class PlayerAudioController : MonoBehaviour
         {
             case PlayerAudioClips.Jump:
                 // audio was broken without this
-                audioSource.pitch = Random.Range(0.3f, 2.0f);
+                audioSource.pitch = Random.Range(0.05f, 3.0f);
 
                 Play(jumpNoise);
                 break;
