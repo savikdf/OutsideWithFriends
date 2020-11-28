@@ -4,6 +4,8 @@ using System.Linq;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(PlayerUIController))]
+[RequireComponent(typeof(PlayerAudioController))]
 public class FirstPersonController : MonoBehaviour
 {
     //movement vars
@@ -13,13 +15,15 @@ public class FirstPersonController : MonoBehaviour
     private float currentForwardSpeed;
 
     private float airboneStrafeModifier = 0.7f;
-
+    private float airbornTime = 0f;
 
     private float jumpSpeed = 20f;
     private List<Ray> groundedRays = new List<Ray>();
+    private float rayRadius = 0.4f;
 
     private CharacterController charCon;
     private PlayerAudioController audioController;
+    private PlayerUIController uiController;
 
     private float verticalVelocity = 0;
     private Vector3 movementVec;
@@ -34,6 +38,15 @@ public class FirstPersonController : MonoBehaviour
     #endregion
 
     #region Sprinting Vars
+
+    private float sprintTimeMax = 15;
+    private float sprintTimeMin = 1;
+    private float sprintTimer = 0f;
+    private bool canSprint {
+        get { 
+            return sprintTimer <= sprintTimeMax;
+        }
+    }
 
     private IEnumerator sprintintCoroutine;
     private float sprintModifier = 2.5f;
@@ -79,8 +92,9 @@ public class FirstPersonController : MonoBehaviour
     public void Awake()
     {
         charCon = GetComponent<CharacterController>();
+        audioController = GetComponent<PlayerAudioController>();
+        uiController = GetComponent<PlayerUIController>();
         camera = GetComponentInChildren<Camera>();
-        audioController = GetComponentInChildren<PlayerAudioController>();
     }
 
     public void Start()
@@ -110,19 +124,30 @@ public class FirstPersonController : MonoBehaviour
                 if (shouldSprint && !isSprinting)
                 {
                     isSprinting = true;
-                    forwardInput = forwardInput * sprintModifier;
                     StartCameraFOVLerp(1);
                 }
-                else if(isSprinting)
+
+                if (isSprinting && canSprint)
                 {
+                    sprintTimer += Time.deltaTime;
                     forwardInput = forwardInput * sprintModifier;
+                }
+                else
+                {
+                    isSprinting = false;
                 }
             }
             else
             {
                 isSprinting = false;
+            }
+            if(!isSprinting)
+            {
+                isSprinting = false;
+                sprintTimer = Mathf.Max(0f, sprintTimer - Time.deltaTime);
                 StartCameraFOVLerp(-1);
             }
+            uiController.SetSprintCircle(1 - (sprintTimer / sprintTimeMax));
 
             movementVec = transform.rotation * new Vector3(strafeInput, verticalVelocity, forwardInput);
             charCon.Move(movementVec * Time.deltaTime);
@@ -136,10 +161,14 @@ public class FirstPersonController : MonoBehaviour
         {
             groundedRays = new List<Ray>() {
                 new Ray(transform.position, -transform.up), //mid
-                new Ray((transform.position + new Vector3(0,0,0.5f)), -transform.up), //top
-                new Ray((transform.position + new Vector3(0,0,0.5f * -1f)), -transform.up), //bot
-                new Ray((transform.position+ new Vector3(0.5f,0,0)), -transform.up), //left
-                new Ray((transform.position+ new Vector3(0.5f *-1f,0,0)), -transform.up) //right
+                new Ray(transform.position + new Vector3(0,0,rayRadius), -transform.up), //N
+                new Ray(transform.position + new Vector3(rayRadius * Mathf.Cos(Mathf.PI/4),0,rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //NE
+                new Ray(transform.position + new Vector3(-rayRadius * Mathf.Cos(Mathf.PI/4),0,rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //NW
+                new Ray(transform.position + new Vector3(0,0,rayRadius * -1f), -transform.up), //S
+                new Ray(transform.position + new Vector3(rayRadius * Mathf.Cos(Mathf.PI/4),0,-rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //SE
+                new Ray(transform.position + new Vector3(-rayRadius * Mathf.Cos(Mathf.PI/4),0,-rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //SW
+                new Ray(transform.position + new Vector3(rayRadius,0,0), -transform.up), //W
+                new Ray(transform.position + new Vector3(rayRadius *-1f,0,0), -transform.up) //E
             };
             
             bool isGrounded = groundedRays.Any(r => {
@@ -150,13 +179,15 @@ public class FirstPersonController : MonoBehaviour
             //Gravity
             if (!isGrounded)
             {
-                verticalVelocity -= (Mathf.Pow(Physics.gravity.y, 2) * Time.deltaTime) / 3f;
-                currentStrafeSpeed = originalForwardSpeed * airboneStrafeModifier;
+                airbornTime = Time.deltaTime;
+                verticalVelocity += Mathf.Min(Physics.gravity.y * airbornTime * 6f, 60f); //terminal velocity
+                currentStrafeSpeed = originalStrafeSpeed * airboneStrafeModifier;
             }
             else if (isGrounded)
             {
                 currentStrafeSpeed = originalStrafeSpeed;
                 verticalVelocity = 0f;
+                airbornTime = 0f;
                 //Jump Check
                 if (Input.GetButton("Jump"))
                 {
@@ -224,5 +255,14 @@ public class FirstPersonController : MonoBehaviour
             elapsedTime += Time.deltaTime;
             yield return null;
         }
+    }
+
+    void OnGUI()
+    {
+        string text = sprintTimer.ToString();
+        GUILayout.Label(text);
+        GUILayout.Label(text);
+
+
     }
 }
