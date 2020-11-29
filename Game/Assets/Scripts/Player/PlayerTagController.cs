@@ -4,8 +4,6 @@ using UnityEngine;
 using System.Linq;
 
 public class PlayerTagController : MonoBehaviour {
-
-    public FirstPersonController FPSC;
     public float reach = 3.0f;
     public GameObject left, right;
     // Start is called before the first frame update
@@ -32,7 +30,9 @@ public class PlayerTagController : MonoBehaviour {
         }
     }
     public void HandleCollision(Collision collision, Vector3 direction){
-        collision.gameObject.GetComponent<Rigidbody>().AddForce(
-            direction * FPSC.GetMoveVector().magnitude, ForceMode.Impulse);
+        if(collision.gameObject.GetComponent<Rigidbody>() != null){
+            collision.gameObject.GetComponent<Rigidbody>().AddForce(
+                        direction * 25, ForceMode.Impulse);
+        }
     }
 }
