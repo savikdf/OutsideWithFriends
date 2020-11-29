@@ -1,32 +1,34 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
 public class PlayerTagController : MonoBehaviour {
     public float reach = 3.0f;
     public GameObject left, right;
     // Start is called before the first frame update
     private string fire1 = "Fire1", fire2 = "Fire2";
+    private bool leftActive = false, rightActive = false;
     void Start() {
+        StartCoroutine(HandleInput());
     }
-
-    void Initialize(){
-    }
-
-    // Update is called once per frame
-    void Update() {
-        if(Input.GetButtonDown(fire1)){
-            left.transform.position += (left.transform.forward * reach);
-        }
-        if(Input.GetButtonUp(fire1)){
-            left.transform.position -= (left.transform.forward * reach);
-        }
-        if(Input.GetButtonDown(fire2)){
-            right.transform.position += (right.transform.forward * reach);
-        } 
-        if(Input.GetButtonUp(fire2)){
-            right.transform.position -= (right.transform.forward * reach);
+    IEnumerator HandleInput(){
+        while(true){
+            if(Input.GetButtonDown(fire1) && !leftActive){
+                left.transform.position += (left.transform.forward * reach);
+                leftActive = true;
+            }
+            if(Input.GetButtonUp(fire1) && leftActive){
+                left.transform.position -= (left.transform.forward * reach);
+                leftActive = false;
+            }
+            if(Input.GetButtonDown(fire2) && !rightActive){
+                right.transform.position += (right.transform.forward * reach);
+                rightActive = true;
+            } 
+            if(Input.GetButtonUp(fire2) && rightActive){
+                right.transform.position -= (right.transform.forward * reach);
+                rightActive = false;
+            }
+            yield return null;
         }
     }
     public void HandleCollision(Collision collision, Vector3 direction){

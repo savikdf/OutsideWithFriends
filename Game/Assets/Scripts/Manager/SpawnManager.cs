@@ -43,5 +43,9 @@ public class SpawnManager : MonoBehaviour, IManager, ISpawnManager
         newPlayer.name = $"Player{index}";
     }
 
+    public IEnumerator Routine(){
+        Debug.Log("Running Spawn Routine");
+        yield return null;
+    }
 
 }
