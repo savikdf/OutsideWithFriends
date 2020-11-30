@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MenuManager : MonoBehaviour, IManager
 {
@@ -28,6 +29,11 @@ public class MenuManager : MonoBehaviour, IManager
         {
             m.GameObject.SetActive(m.MenuIndex == toIndex);
         });
+    }
+
+    public void TransitionToLevel(int toIndex)
+    {
+        SceneManager.LoadScene(toIndex);
     }
 
     public bool Initialize()

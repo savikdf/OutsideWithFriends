@@ -3,10 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum TransitionType
+{
+    Menu,
+    Level
+}
+
 public class MenuTransitioner : MonoBehaviour
 {
     public string buttonName { get; set; }
+    public TransitionType buttonTransitionType;
     public int toIndex;
+
     [HideInInspector]
     public int fromIndex;
 

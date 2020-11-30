@@ -22,17 +22,25 @@ public class MenuCodeBehind : MonoBehaviour, IMenuCodeBehind
         transferButtons.ForEach(b =>
         {
             b.GetComponent<Button>().onClick.AddListener(delegate { TransferButtonClicked(b); });
-            b.fromIndex = menuIndex;
+            b.fromIndex = menuIndex;            
         });
+        RectTransform rec = GetComponent<RectTransform>();
+        rec.anchoredPosition3D = Vector3.zero;
         MenuIndex = menuIndex;
     }
 
     public virtual void TransferButtonClicked(MenuTransitioner t) {
-        MenuTransitioner transitioner = t.GetComponent<MenuTransitioner>();
-        if(transitioner != null)
+        if(t != null)
         {
-            Debug.Log($"{transitioner.buttonName} transitioning to menu index: {transitioner.toIndex}");
-            MenuManager.instance.TransitionMenus(t.toIndex);
+            if (t.buttonTransitionType == TransitionType.Menu) {
+                Debug.Log($"{t.buttonName} transitioning to menu index: {t.toIndex}");
+                MenuManager.instance.TransitionMenus(t.toIndex);
+            }
+            else if (t.buttonTransitionType == TransitionType.Level)
+            {
+                Debug.Log($"{t.buttonName} transitioning to scene index: {t.toIndex}");
+                MenuManager.instance.TransitionToLevel(t.toIndex);
+            }
         }
     }
 
