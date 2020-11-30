@@ -5,5 +5,7 @@ using UnityEngine;
 public interface IMenuCodeBehind
 {
     int MenuIndex { get; set; }
+    GameObject GameObject { get; set; }
+
     void Initialize();
 }
