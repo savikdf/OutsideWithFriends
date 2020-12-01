@@ -25,7 +25,11 @@ public class FirstPersonController : MonoBehaviour
     private PlayerAudioController audioController;
     private PlayerUIController uiController;
 
-    private float verticalVelocity = 0;
+    [HideInInspector]
+    public float verticalVelocity = 0;
+    [HideInInspector]
+    public bool boostApplied = false;
+    private float boostTimer = 0f;
     private Vector3 movementVec;
     private Camera camera;
 
@@ -56,7 +60,7 @@ public class FirstPersonController : MonoBehaviour
     //modifiers
     private float sprintSpeedModifier = 2.5f;
     private float sprintRechargeModifier = 2f;
-    private float FOVSprintModifier = 1.5f;
+    private float FOVSprintModifier = 1.2f;
 
     //inputs
     private bool sprintHit = false;
@@ -100,12 +104,32 @@ public class FirstPersonController : MonoBehaviour
         currentForwardSpeed = originalForwardSpeed;
 
 
-        StartCoroutine(Look());
-        StartCoroutine(Jump());
-        StartCoroutine(Move());
+        StartCoroutine(TrackLook());
+        StartCoroutine(TrackJump());
+        StartCoroutine(TrackMove());
     }
 
-    public IEnumerator Move()
+    private void LateUpdate()
+    {
+        if (boostApplied)
+        {
+            boostTimer += Time.deltaTime;
+            if (boostTimer >= 0.1f)
+            {
+                //insurance for boosts getting applied multiple times o
+                boostTimer = 0f;
+                boostApplied = false;
+            }
+        }
+        charCon.Move(transform.rotation * movementVec * Time.deltaTime);
+    }
+
+    public void ApplyBoost(Vector3 boostVec) {
+        verticalVelocity = boostVec.y;
+        boostApplied = true;
+    }
+
+    public IEnumerator TrackMove()
     {
         while (canMove && charCon != null)
         {
@@ -161,13 +185,13 @@ public class FirstPersonController : MonoBehaviour
 
             #endregion
 
-            movementVec = transform.rotation * new Vector3(strafeInput, verticalVelocity, forwardInput);
-            charCon.Move(movementVec * Time.deltaTime);
+            movementVec = new Vector3(strafeInput, verticalVelocity, forwardInput);
+            //charCon.Move(movementVec * Time.deltaTime);
             yield return null;
         }
     }
 
-    private IEnumerator Jump()
+    private IEnumerator TrackJump()
     {
         while (canMove && charCon != null)
         {
@@ -188,7 +212,7 @@ public class FirstPersonController : MonoBehaviour
                 return Physics.Raycast(r, out hit, charCon.height/2f + .15f, 1, QueryTriggerInteraction.Ignore);
             });
 
-            //Gravity
+            //Gravity            
             if (!isGrounded)
             {
                 airbornTime = Time.deltaTime;
@@ -198,9 +222,8 @@ public class FirstPersonController : MonoBehaviour
             else if (isGrounded)
             {
                 currentStrafeSpeed = originalStrafeSpeed;
-                verticalVelocity = 0f;
                 airbornTime = 0f;
-                //Jump Check
+                //Jump Check                
                 if (Input.GetButton("Jump"))
                 {
                     verticalVelocity = jumpSpeed;
@@ -211,7 +234,7 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
-    private IEnumerator Look()
+    private IEnumerator TrackLook()
     {
         while (canLook && camera != null)
         {

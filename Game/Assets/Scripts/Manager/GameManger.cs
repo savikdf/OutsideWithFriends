@@ -49,7 +49,7 @@ public class GameManger : MonoBehaviour, IManager
 
     private IEnumerator DetectDebugInputs() {
         while (isDebug) {
-            if (Input.GetKeyDown(KeyCode.Escape)) {
+            if (Input.GetKeyDown(KeyCode.Delete)) {
                 Debug.Log("Resetting Scene");
                 SceneManager.LoadScene(SceneManager.GetActiveScene().name);
             }

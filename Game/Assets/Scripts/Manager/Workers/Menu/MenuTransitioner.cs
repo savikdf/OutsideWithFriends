@@ -6,7 +6,8 @@ using UnityEngine.UI;
 public enum TransitionType
 {
     Menu,
-    Level
+    SubMenu,
+    Level    
 }
 
 public class MenuTransitioner : MonoBehaviour
