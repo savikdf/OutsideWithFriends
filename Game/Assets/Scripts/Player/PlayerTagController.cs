@@ -4,29 +4,33 @@ using UnityEngine;
 public class PlayerTagController : MonoBehaviour {
     public float reach = 3.0f;
     public GameObject left, right;
-    // Start is called before the first frame update
-    private string fire1 = "Fire1", fire2 = "Fire2";
-    private bool leftActive = false, rightActive = false;
+    private IInputManager input;
     void Start() {
         StartCoroutine(HandleInput());
+
+    }
+    void Awake(){
+        input = GameManger.gameManger.InputManager;
     }
     IEnumerator HandleInput(){
         while(true){
-            if(Input.GetButtonDown(fire1) && !leftActive){
-                left.transform.position += (left.transform.forward * reach);
-                leftActive = true;
-            }
-            if(Input.GetButtonUp(fire1) && leftActive){
-                left.transform.position -= (left.transform.forward * reach);
-                leftActive = false;
-            }
-            if(Input.GetButtonDown(fire2) && !rightActive){
-                right.transform.position += (right.transform.forward * reach);
-                rightActive = true;
-            } 
-            if(Input.GetButtonUp(fire2) && rightActive){
-                right.transform.position -= (right.transform.forward * reach);
-                rightActive = false;
+            if(input != null){
+                //Debug.Log("NOT NULL.");
+                if(input.GetInput().fire1 == state.UP){
+                    left.transform.position -= (left.transform.forward * reach);
+                } else if (input.GetInput().fire1 == state.DOWN){
+                    left.transform.position += (left.transform.forward * reach);;
+                }
+                if(input.GetInput().fire1 == state.NONE){
+                }
+
+                if(input.GetInput().fire2 == state.UP){
+                    right.transform.position -= (right.transform.forward * reach);
+                } else if (input.GetInput().fire2 == state.DOWN){
+                    right.transform.position += (right.transform.forward * reach);;
+                }
+                if(input.GetInput().fire2 == state.NONE){
+                }
             }
             yield return null;
         }

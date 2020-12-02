@@ -5,5 +5,6 @@ using UnityEngine;
 public interface IManager
 {
     bool Initialize();
+    
     IEnumerator Routine();
 }

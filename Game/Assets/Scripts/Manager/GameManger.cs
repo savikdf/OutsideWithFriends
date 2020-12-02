@@ -7,12 +7,11 @@ public class GameManger : MonoBehaviour, IManager
 {
     public static GameManger gameManger;
     public static IResourceLoader resourceLoader;
-
     public bool isDebug;
     private ISpawnManager spawnManager;
-    private InputManager inputManager;
+    private IInputManager inputManager;
     private List<IManager> managers = new List<IManager>();
-
+    public IInputManager InputManager{get{return this.inputManager;} set{}}
     public GameManger() : this(new ResourceLoader(), new SpawnManager(), new InputManager()) { }
 
     public GameManger(IResourceLoader newResourceLoader, ISpawnManager newSpawnManager, InputManager newInputManager)
@@ -29,11 +28,9 @@ public class GameManger : MonoBehaviour, IManager
         managers.Add(inputManager);
         Initialize();        
     }
-
     public bool Initialize()
     {
         managers.ForEach(m => m.Initialize());
-        
         // running manager's routine's
         managers.ForEach(m => StartCoroutine(m.Routine()));
 
@@ -42,11 +39,10 @@ public class GameManger : MonoBehaviour, IManager
 
         return true;
     }
-
+ 
     public IEnumerator Routine(){
         yield return null;
     }
-
     private IEnumerator DetectDebugInputs() {
         while (isDebug) {
             if (Input.GetKeyDown(KeyCode.Delete)) {
