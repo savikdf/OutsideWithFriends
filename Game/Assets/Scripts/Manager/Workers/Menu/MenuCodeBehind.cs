@@ -33,12 +33,12 @@ public class MenuCodeBehind : MonoBehaviour, IMenuCodeBehind
         if(t != null)
         {
             if (t.buttonTransitionType == TransitionType.Menu) {
-                Debug.Log($"{t.buttonName} transitioning to menu index: {t.toIndex}");
+                //Debug.Log($"{t.buttonName} transitioning to menu index: {t.toIndex}");
                 MenuManager.instance.TransitionMenus(t.toIndex);
             }
             else if (t.buttonTransitionType == TransitionType.Level)
             {
-                Debug.Log($"{t.buttonName} transitioning to scene index: {t.toIndex}");
+                //Debug.Log($"{t.buttonName} transitioning to scene index: {t.toIndex}");
                 MenuManager.instance.TransitionToLevel(t.toIndex);
             }
         }
