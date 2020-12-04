@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class MenuCodeBehind : MonoBehaviour, IMenuCodeBehind
 {
     public int menuIndex;
+    public bool isMultiplayerMenu = false;
     public int MenuIndex { get { return menuIndex; } set { menuIndex = value; } }
     public GameObject GameObject { get { return this.gameObject; } set {  } }
 
@@ -43,5 +44,4 @@ public class MenuCodeBehind : MonoBehaviour, IMenuCodeBehind
             }
         }
     }
-
 }

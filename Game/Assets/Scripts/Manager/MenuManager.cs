@@ -11,6 +11,10 @@ public class MenuManager : MonoBehaviour, IManager
     public static MenuManager instance;
     private NetworkLobbyManager networkManager;
     public List<IMenuCodeBehind> menuCodeBehinds = new List<IMenuCodeBehind>();
+    private LobbyMenuCodeBehind lobbyCodeBehind;
+
+    private bool isLobbyHost = false;
+    private Button joinButton = null;
 
     public void Awake()
     {
@@ -19,6 +23,11 @@ public class MenuManager : MonoBehaviour, IManager
         menuCodeBehinds = FindObjectsOfType<MonoBehaviour>().OfType<IMenuCodeBehind>().ToList();
         if (menuCodeBehinds.GroupBy(m => m.MenuIndex).Any(g => g.Count() > 1)) {
             Debug.LogError("Menu's with the same index exist. Fix or transition errors will occur");
+        }
+        lobbyCodeBehind = (LobbyMenuCodeBehind)menuCodeBehinds.FirstOrDefault(cb => cb.GetType() == typeof(LobbyMenuCodeBehind)); 
+        if(lobbyCodeBehind == null)
+        {
+            Debug.LogError("No Lobby Codebehind detected");
         }
         Initialize();
     }
@@ -50,34 +59,47 @@ public class MenuManager : MonoBehaviour, IManager
 
     #region Multiplayer
 
-    public void JoinLobbyTransition(bool enabled) {
-        if (enabled)
-        {
-            NetworkLobbyManager.OnClientConnected += HanddleClientConnected;
-            NetworkLobbyManager.OnClientDisconnected += HanddleClientDisconnected;
-        }
-        else
-        {
-            NetworkLobbyManager.OnClientConnected -= HanddleClientConnected;
-            NetworkLobbyManager.OnClientDisconnected -= HanddleClientDisconnected;
-        }
-    }
+    public void JoinLobbyAttempt(Button button) {
+        //disable button and grab input ip
+        string ip = GameObject.Find("Input_IP").GetComponent<InputField>().text; //only input is IP field
+        joinButton = button;
+        joinButton.enabled = false;
 
-    public void ConnectToLobby(Text ipInput) {
-        networkManager.networkAddress = ipInput.text;
+        //sub to callback events
+        NetworkLobbyManager.OnClientConnected += HanddleClientConnected;
+        NetworkLobbyManager.OnClientDisconnected += HanddleClientDisconnected;
+
+        //attempt connection
+        networkManager.networkAddress = ip;
         networkManager.StartClient();
     }
 
-    public void HostLobbyTransition() {
+    public void ConnectToLobby(Text ipInput) {
+        
+    }
+
+    public void HostLobbyStart() {
         networkManager.StartHost();
     }
 
-    private void HanddleClientConnected() { 
-        
+    //Callback event
+    private void HanddleClientConnected() {
+        joinButton.enabled = true;
+        TransitionMenus(3);
     }
+    //Callback event
     private void HanddleClientDisconnected()
     {
+        joinButton.enabled = true;
+    }
 
+    public void LobbyCancel() {
+        if (isLobbyHost)
+            networkManager.StopHost();
+        lobbyCodeBehind.PlayerList = new List<string>();
+        //unsub to callback events
+        NetworkLobbyManager.OnClientConnected -= HanddleClientConnected;
+        NetworkLobbyManager.OnClientDisconnected -= HanddleClientDisconnected;
     }
 
     #endregion
