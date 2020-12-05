@@ -1,7 +1,8 @@
 using System;
 using System.Collections;
 using UnityEngine;
- 
+using Utils;
+
 public class InputManager : MonoBehaviour, IManager, IInputManager {
     private GameObject player;
     public GameObject Player { 
@@ -19,7 +20,7 @@ public class InputManager : MonoBehaviour, IManager, IInputManager {
     private InputMap map;
     private string fire1 = "Fire1", fire2 = "Fire2";
     public bool Initialize() {
-        Debug.Log($"Initializing {GetType().Name}.");
+        DebugCol.Log(new Color(70, 107, 250, 1), $"Initializing {GetType().Name}.");
         return true;
     }
     public void SetInput(InputMap map){
