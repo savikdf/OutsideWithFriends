@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-
+using Utils;
 public class SpawnManager : MonoBehaviour, IManager, ISpawnManager
 {
     private GameObject player;
@@ -24,7 +24,7 @@ public class SpawnManager : MonoBehaviour, IManager, ISpawnManager
 
     public bool Initialize()
     {
-        Debug.Log($"Initializing {GetType().Name}.");
+        DebugCol.Log(new Color(30, 215, 96, 1), $"Initializing {GetType().Name}.");
 
         //wipe all existing players for a fresh spawn
         List<Player> playersInScene = FindObjectsOfType<Player>().ToList();
