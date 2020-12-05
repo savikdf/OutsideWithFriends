@@ -282,6 +282,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Controller: {fileID: 1259590185}
+  name: left
 --- !u!1 &1558967347
 GameObject:
   m_ObjectHideFlags: 0
@@ -433,6 +434,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Controller: {fileID: 1259590185}
+  name: right
 --- !u!1 &769095780632201630
 GameObject:
   m_ObjectHideFlags: 0
@@ -834,6 +836,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b802bb0578b7c464ea967bfb5b68f459, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  verticalVelocity: 0
+  boostApplied: 0
 --- !u!82 &1840317484
 AudioSource:
   m_ObjectHideFlags: 0
@@ -942,7 +946,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4f38230a554610448dcbddb3a5d63fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  audioSource: {fileID: 1840317484}
+  tagAudioSource: {fileID: 0}
   jumpNoise: {fileID: 8300000, guid: 676bc6310255ac441ac583eba7a21eaf, type: 3}
+  fireNoise: {fileID: 8300000, guid: 7096668ff9d11e549aba949d7bef9cb0, type: 3}
 --- !u!114 &1840317487
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -968,10 +975,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d4571e088326394cb3d41f8d0c86ce3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  FPSC: {fileID: 8046696412621918761}
   reach: 1.5
   left: {fileID: 1084694194}
   right: {fileID: 1699352937}
+  timeInterval: 0.05
 --- !u!1 &8046696414126501962
 GameObject:
   m_ObjectHideFlags: 0
