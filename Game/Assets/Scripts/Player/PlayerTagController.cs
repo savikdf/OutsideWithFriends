@@ -1,44 +1,78 @@
 ﻿using System.Collections;
 using UnityEngine;
+using Utils;
 
+[RequireComponent(typeof(PlayerAudioController))]
 public class PlayerTagController : MonoBehaviour {
+    private PlayerAudioController audioController;
     public float reach = 3.0f;
     public GameObject left, right;
     private IInputManager input;
-    void Start() {
-        StartCoroutine(HandleInput());
-
-    }
+    private double leftTimeStamp, leftTimeDifference;
+    private double rightTimeStamp, rightTimeDifference;
+    public double timeInterval = 0.05;
+    private bool leftTrigger, rightTrigger;
     void Awake(){
+        audioController = GetComponent<PlayerAudioController>();
+        StartCoroutine(HandleInput());
         input = GameManger.gameManger.InputManager;
     }
     IEnumerator HandleInput(){
         while(true){
-            if(input != null){
-                //Debug.Log("NOT NULL.");
-                if(input.GetInput().fire1 == state.UP){
-                    left.transform.position -= (left.transform.forward * reach);
-                } else if (input.GetInput().fire1 == state.DOWN){
-                    left.transform.position += (left.transform.forward * reach);;
-                }
-                if(input.GetInput().fire1 == state.NONE){
-                }
+            if (input != null){
 
-                if(input.GetInput().fire2 == state.UP){
-                    right.transform.position -= (right.transform.forward * reach);
-                } else if (input.GetInput().fire2 == state.DOWN){
-                    right.transform.position += (right.transform.forward * reach);;
-                }
-                if(input.GetInput().fire2 == state.NONE){
-                }
+            // left hand
+            HandleHand(
+                left, 
+                input.GetInput().fire1, 
+                ref leftTrigger, 
+                ref leftTimeStamp, 
+                ref leftTimeDifference);
+
+            // right hand
+            HandleHand(
+                right, 
+                input.GetInput().fire2, 
+                ref rightTrigger, 
+                ref rightTimeStamp, 
+                ref rightTimeDifference);  
             }
+     
             yield return null;
         }
     }
-    public void HandleCollision(Collision collision, Vector3 direction){
+
+    void HandleHand(GameObject hand, state fire, ref bool trigger, ref double timeStamp, ref double timeDifference){
+        Vector3 extend = hand.transform.position;
+        if(input != null){
+            //Debug.Log("NOT NULL.");
+            if(fire == state.DOWN && !trigger){
+                audioController.PlayPlayerClip(PlayerAudioClips.Fire);
+                timeStamp = Time.time;
+                trigger = true;
+                extend += hand.transform.forward * reach;
+            }
+            if(trigger){
+                timeDifference = Time.time - timeStamp;
+                if(timeDifference > timeInterval){
+                    trigger = false;
+                        extend -= hand.transform.forward * reach;
+                }
+            }
+            hand.transform.position = extend;
+        }
+    }
+
+    public void HandleCollision(Collision collision, Vector3 direction, string who){
         if(collision.gameObject.GetComponent<Rigidbody>() != null){
-            collision.gameObject.GetComponent<Rigidbody>().AddForce(
-                        direction * 25, ForceMode.Impulse);
+            if (who == "left" && leftTrigger) {
+                collision.gameObject.GetComponent<Rigidbody>().AddForce(
+                        direction * 100, ForceMode.Impulse);
+            } else if (who == "right" && rightTrigger) {
+                collision.gameObject.GetComponent<Rigidbody>().AddForce(
+                        direction * 100, ForceMode.Impulse);
+            }
+
         }
     }
 }
