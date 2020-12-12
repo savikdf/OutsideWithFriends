@@ -133,13 +133,13 @@ public class FirstPersonController : MonoBehaviour
     {
         while (canMove && charCon != null)
         {
-            float forwardInput = Input.GetAxis("Forward") * currentForwardSpeed;
-            float strafeInput = Input.GetAxis("Sideways") * currentStrafeSpeed;
-            sprintHit = Input.GetKeyDown(KeyCode.LeftShift);
+            float forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed;
+            float strafeInput = Input.GetAxis("Horizontal") * currentStrafeSpeed;
+            sprintHit = Input.GetKeyDown(KeyCode.LeftShift) || Input.GetAxisRaw("Sprint") > 0;
 
             #region Sprint Logic
 
-            if (Input.GetAxisRaw("Forward") > 0)
+            if (Input.GetAxisRaw("Vertical") > 0)
             {                
                 if (!isSprinting && sprintHit)
                 {

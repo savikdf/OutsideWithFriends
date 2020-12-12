@@ -12,6 +12,5 @@ using UnityEngine;
 public static class ResourcePaths
 {
     public static readonly string PlayerPrefabPath = "Player/PlayerPrefab";
-    public static readonly string NetworkPrefabsPath = "NetworkPrefabs";
-
+    public static readonly string SpawnablePrefabsPath = "Prefabs/Spawnable";
 }

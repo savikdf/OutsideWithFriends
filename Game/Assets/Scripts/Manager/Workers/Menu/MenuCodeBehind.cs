@@ -11,6 +11,7 @@ public class MenuCodeBehind : MonoBehaviour, IMenuCodeBehind
     public int MenuIndex { get { return menuIndex; } set { menuIndex = value; } }
     public GameObject GameObject { get { return this.gameObject; } set {  } }
 
+    private MenuManager menuManager = null;
 
     public List<MenuTransitioner> TransferButtons { get; set; }
 
@@ -19,6 +20,7 @@ public class MenuCodeBehind : MonoBehaviour, IMenuCodeBehind
 
     public void Initialize()
     {
+        menuManager = FindObjectOfType<MenuManager>().GetComponent<MenuManager>();
         transferButtons = GetComponentsInChildren<MenuTransitioner>().ToList();
         transferButtons.ForEach(b =>
         {
@@ -35,12 +37,12 @@ public class MenuCodeBehind : MonoBehaviour, IMenuCodeBehind
         {
             if (t.buttonTransitionType == TransitionType.Menu) {
                 //Debug.Log($"{t.buttonName} transitioning to menu index: {t.toIndex}");
-                MenuManager.instance.TransitionMenus(t.toIndex);
+                menuManager.TransitionMenus(t.toIndex);
             }
             else if (t.buttonTransitionType == TransitionType.Level)
             {
                 //Debug.Log($"{t.buttonName} transitioning to scene index: {t.toIndex}");
-                MenuManager.instance.TransitionToLevel(t.toIndex);
+                menuManager.TransitionToLevel(t.toIndex);
             }
         }
     }

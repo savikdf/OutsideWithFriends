@@ -20,7 +20,7 @@ public class JumpPad : MonoBehaviour
             if (fpc != null)
             {
                 fpc.ApplyBoost(boostVec);
-                Debug.Log("Applying boost on " + other.gameObject.name);
+                AudioManager.singleton.PlayOneShotClipAtPoint(EnvironmentClips.JumpPad, this.transform.position);
             }
         }        
     }
