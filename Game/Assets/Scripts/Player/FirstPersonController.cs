@@ -35,7 +35,7 @@ public class FirstPersonController : MonoBehaviour
 
     #region Camera Variables
 
-    private float mouseSensitivity = 5.0f; //def 5
+    private float mouseSensitivity = 4.0f; //def 4
     private float upDownRange = 85f;
     private float verticalRotation = 0;
 
@@ -135,7 +135,7 @@ public class FirstPersonController : MonoBehaviour
         {
             float forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed;
             float strafeInput = Input.GetAxis("Horizontal") * currentStrafeSpeed;
-            sprintHit = Input.GetKeyDown(KeyCode.LeftShift) || Input.GetAxisRaw("Sprint") > 0;
+            sprintHit = Input.GetKeyDown(KeyCode.LeftShift);
 
             #region Sprint Logic
 
