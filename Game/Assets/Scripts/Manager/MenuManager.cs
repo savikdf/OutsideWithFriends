@@ -45,7 +45,9 @@ public class MenuManager : MonoBehaviour, IManager
 
     public void JoinLobby(Button button) {
         //disable button and grab input ip
-        string ip = GameObject.Find("Input_IP").GetComponent<InputField>().text; //only input is IP field
+        string ip = GameObject.Find("Input_IP").GetComponent<InputField>().text;    //only input is IP field
+        ip = string.IsNullOrWhiteSpace(ip) ? "localhost" : ip;                      //default to localhost if empty input
+
         joinButton = button;
         joinButton.enabled = false;
 

@@ -8,12 +8,24 @@ using UnityEngine.SceneManagement;
 
 public class NetworkManagerLobby : NetworkManager
 {
-    [SerializeField] private int minPlayers = 2;
-    [Scene] [SerializeField] private string menuScene = string.Empty;
+    [SerializeField] private int minPlayers = 1;
+    [Scene] [SerializeField] private string menuScene = "MainMenu";
 
     [Header("Room")]
     [SerializeField] private NetworkRoomPlayerLobby roomPlayerPrefab = null;
-    [HideInInspector] public List<NetworkRoomPlayerLobby> RoomPlayers { get; } = new List<NetworkRoomPlayerLobby>();
+    public List<NetworkRoomPlayerLobby> RoomPlayers { get; } = new List<NetworkRoomPlayerLobby>();
+
+    [Header("Game")]
+    [SerializeField] private NetworkGamePlayerLobby gamePlayerPrefab = null;
+    public List<NetworkGamePlayerLobby> GamePlayers { get; } = new List<NetworkGamePlayerLobby>();
+
+    private bool IsAllPlayersReady
+    {
+        get
+        {
+            return RoomPlayers.All(p => p.IsReady);
+        }
+    }
 
     public static event Action OnClientConnected;
     public static event Action OnClientDisconnected;
@@ -35,7 +47,7 @@ public class NetworkManagerLobby : NetworkManager
     }
     public override void OnClientDisconnect(NetworkConnection conn)
     {
-        //do base logic then raise event
+        ////do base logic then raise event
         base.OnClientDisconnect(conn);
         OnClientDisconnected?.Invoke();
     }
@@ -48,7 +60,6 @@ public class NetworkManagerLobby : NetworkManager
             return;
         }
 
-        ////this doesnt work, the scene name compare
         //if (SceneManager.GetActiveScene().name != menuScene)
         //{
         //    //this stops midsession joining
@@ -86,7 +97,39 @@ public class NetworkManagerLobby : NetworkManager
 
     public void NotifyPlayersOfReadyState()
     {
-        bool roomReady = RoomPlayers.Count < minPlayers && RoomPlayers.All(pl => pl.IsReady);
-        RoomPlayers.ForEach(p => { p.HandleReadyToStart(roomReady); });
+        RoomPlayers.ForEach(p => { p.HandleReadyToStart(IsAllPlayersReady); });
+    }
+
+    public void StartGame()
+    {
+        if (SceneManager.GetActiveScene().name == "MainMenu")
+        {
+            if (!IsAllPlayersReady)
+            {
+                return;
+            }
+            ServerChangeScene("Level_Woods"); //only one level for now
+        }
+    }
+
+    public override void OnServerChangeScene(string newSceneName)
+    {
+        if (SceneManager.GetActiveScene().name == menuScene && newSceneName.StartsWith("Level_"))
+        {
+            for (int i = 0; i < RoomPlayers.Count; i++)
+            {
+                NetworkConnection conn = RoomPlayers[i].connectionToClient;
+                NetworkGamePlayerLobby gamePlayerInstance = Instantiate(gamePlayerPrefab);
+                gamePlayerInstance.SetDisplayName(RoomPlayers[i].DisplayName);
+
+                //remove from menu lobby
+                NetworkServer.Destroy(conn.identity.gameObject);
+
+                NetworkServer.ReplacePlayerForConnection(conn, gamePlayerInstance.gameObject);
+            }
+            base.OnServerChangeScene(newSceneName);
+        }
+
+
     }
 }

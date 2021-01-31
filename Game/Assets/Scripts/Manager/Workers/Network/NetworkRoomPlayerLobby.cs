@@ -119,7 +119,7 @@ public class NetworkRoomPlayerLobby : NetworkBehaviour
     {
         if(!Room.RoomPlayers[0].isLeader) { return; }
         Debug.Log("Starting Game");
-        //StartGame -- coming soon
+        Room.StartGame();
     }
 
     [Command]

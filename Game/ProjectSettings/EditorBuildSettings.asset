@@ -14,4 +14,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/TagZone.unity
     guid: 77d782551997eed478458206e05a38df
+  - enabled: 1
+    path: Assets/Scenes/Level_Woods.unity
+    guid: f6c810438a7c3aa4187552e1fdaacd64
   m_configObjects: {}
