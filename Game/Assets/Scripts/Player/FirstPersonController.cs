@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Utils;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(PlayerUIController))]
@@ -21,6 +22,7 @@ public class FirstPersonController : MonoBehaviour
     private List<Ray> groundedRays = new List<Ray>();
     private float rayRadius = 0.4f;
 
+    private float slideForwardSpeed = 3.2f;
     private CharacterController charCon;
     private PlayerAudioController audioController;
     private PlayerUIController uiController;
@@ -135,7 +137,8 @@ public class FirstPersonController : MonoBehaviour
         while (canMove && charCon != null)
         {   
             #region  raycast cluster fuck 凸ಠ益ಠ)凸
-            groundedRays = new List<Ray>() {
+            groundedRays = new List<Ray>() 
+            {
                 new Ray(transform.position, -transform.up), //mid
                 new Ray(transform.position + new Vector3(0,0,rayRadius), -transform.up), //N
                 new Ray(transform.position + new Vector3(rayRadius * Mathf.Cos(Mathf.PI/4),0,rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //NE
@@ -148,7 +151,8 @@ public class FirstPersonController : MonoBehaviour
             };
             Vector3 floorAngle = new Vector3();
 
-            for(int i = 0; i < groundedRays.Count(); i++){
+            for(int i = 0; i < groundedRays.Count(); i++)
+            {
                 var r = groundedRays[i];
 
                 RaycastHit hit = new RaycastHit();
@@ -156,23 +160,36 @@ public class FirstPersonController : MonoBehaviour
                     floorAngle += hit.normal;
                 }
             }
-            #endregion
+        
 
+            // inverting the normals, for *reasons*
             floorAngle = floorAngle.normalized * -1;
-            float floorLerp = 
-            (Vector3.Angle(floorAngle, transform.forward)/90.0f) * 3.0f; 
             
+            // floorLerp is an attempt to normalize the angles returned from Vector3.Angle
+            // which is returned in degree's and range between 0 - 180 || 90 (i'm not 100% on that yet)
+            float floorLerp = (Vector3.Angle(floorAngle, transform.forward)/90.0f); 
+            
+            // capping the floor angle to 1 for flatties
             floorLerp = (floorLerp <= 0) ? 1.0f : floorLerp;
-            
-            //Debug.Log(floorLerp.ToString());
 
-            if (floorLerp <= 3.0f) {
-               forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed * floorLerp;      
-            } else {
-                float current_forward = Input.GetAxis("Vertical") * currentForwardSpeed * floorLerp;
+            //DebugCol.Log(new Color(1,0,0), (Vector3.Angle(floorAngle, transform.forward)/90.0f).ToString());
+
+            // if the returned angle is lesser (flat surface) carry on with ur day
+            // but > 1.05f normal slope angle means a steeper slope
+            // forward momentum is locked and the player slides Ｏ(≧∇≦)Ｏ
+            if (floorLerp <= 1.05f) 
+            {
+               forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed * (floorLerp * slideForwardSpeed);      
+            } 
+            else 
+            {
+                // returns the max value between current and new input
+                // basically the player can't slow down 
+                float current_forward = Input.GetAxis("Vertical") * currentForwardSpeed * (floorLerp * slideForwardSpeed);
                 forwardInput = Mathf.Max(forwardInput, current_forward);
             }
-           
+
+            #endregion
 
             float strafeInput = Input.GetAxis("Horizontal") * currentStrafeSpeed;
             sprintHit = Input.GetKeyDown(KeyCode.LeftShift);
