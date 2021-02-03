@@ -164,7 +164,7 @@ public class FirstPersonController : MonoBehaviour
             
             floorLerp = (floorLerp <= 0) ? 1.0f : floorLerp;
             
-            Debug.Log(floorLerp.ToString());
+            //Debug.Log(floorLerp.ToString());
 
             if (floorLerp <= 3.0f) {
                forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed * floorLerp;      
