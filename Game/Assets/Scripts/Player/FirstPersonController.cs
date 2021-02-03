@@ -80,6 +80,7 @@ public class FirstPersonController : MonoBehaviour
     private bool canLook = true;
     private bool canMove = true;  
 
+    float forwardInput = 0.0f;
 
     #endregion
 
@@ -132,8 +133,47 @@ public class FirstPersonController : MonoBehaviour
     public IEnumerator TrackMove()
     {
         while (canMove && charCon != null)
-        {
-            float forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed;
+        {   
+            #region  raycast cluster fuck 凸ಠ益ಠ)凸
+            groundedRays = new List<Ray>() {
+                new Ray(transform.position, -transform.up), //mid
+                new Ray(transform.position + new Vector3(0,0,rayRadius), -transform.up), //N
+                new Ray(transform.position + new Vector3(rayRadius * Mathf.Cos(Mathf.PI/4),0,rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //NE
+                new Ray(transform.position + new Vector3(-rayRadius * Mathf.Cos(Mathf.PI/4),0,rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //NW
+                new Ray(transform.position + new Vector3(0,0,rayRadius * -1f), -transform.up), //S
+                new Ray(transform.position + new Vector3(rayRadius * Mathf.Cos(Mathf.PI/4),0,-rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //SE
+                new Ray(transform.position + new Vector3(-rayRadius * Mathf.Cos(Mathf.PI/4),0,-rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //SW
+                new Ray(transform.position + new Vector3(rayRadius,0,0), -transform.up), //W
+                new Ray(transform.position + new Vector3(rayRadius *-1f,0,0), -transform.up) //E
+            };
+            Vector3 floorAngle = new Vector3();
+
+            for(int i = 0; i < groundedRays.Count(); i++){
+                var r = groundedRays[i];
+
+                RaycastHit hit = new RaycastHit();
+                if (Physics.Raycast(r, out hit, charCon.height/2f + .15f, 1, QueryTriggerInteraction.Ignore)) {
+                    floorAngle += hit.normal;
+                }
+            }
+            #endregion
+
+            floorAngle = floorAngle.normalized * -1;
+            float floorLerp = 
+            (Vector3.Angle(floorAngle, transform.forward)/90.0f) * 3.0f; 
+            
+            floorLerp = (floorLerp <= 0) ? 1.0f : floorLerp;
+            
+            Debug.Log(floorLerp.ToString());
+
+            if (floorLerp <= 3.0f) {
+               forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed * floorLerp;      
+            } else {
+                float current_forward = Input.GetAxis("Vertical") * currentForwardSpeed * floorLerp;
+                forwardInput = Mathf.Max(forwardInput, current_forward);
+            }
+           
+
             float strafeInput = Input.GetAxis("Horizontal") * currentStrafeSpeed;
             sprintHit = Input.GetKeyDown(KeyCode.LeftShift);
 
@@ -166,7 +206,7 @@ public class FirstPersonController : MonoBehaviour
                 isSprinting = true;
                 sprintTimer += Time.deltaTime;
                 sprintChargeTimer = 0f;
-                forwardInput = forwardInput * sprintSpeedModifier;
+                forwardInput *= sprintSpeedModifier;
             }
             if (!isSprinting || sprintTimer > sprintTimeMax)
             {
@@ -186,6 +226,7 @@ public class FirstPersonController : MonoBehaviour
             #endregion
 
             movementVec = new Vector3(strafeInput, verticalVelocity, forwardInput);
+            
             //charCon.Move(movementVec * Time.deltaTime);
             yield return null;
         }
