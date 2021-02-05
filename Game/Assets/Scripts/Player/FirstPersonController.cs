@@ -180,7 +180,9 @@ public class FirstPersonController : MonoBehaviour
             crouchHitDown = Input.GetKeyDown(KeyCode.LeftControl);
             crouchHitUp = Input.GetKeyUp(KeyCode.LeftControl);
 
-            Vector3 floorAngle = GetFloorNormal(); 
+            float floorLerp = (Vector3.Angle(GetFloorNormal(), transform.forward)/90.0f); 
+            floorLerp = (floorLerp <= 0) ? 1.0f : floorLerp;
+            movementVec.z *= floorLerp * 3.0f;
 
             #region crouch logic
                 Camera cam = this.GetComponentInChildren<Camera>();
@@ -210,7 +212,7 @@ public class FirstPersonController : MonoBehaviour
             
             #region slide logic
             // lock forward motion if crouching
-            if(isCrouch && forwardInput > 0)
+            if(isCrouch && movementVec.z > 5.0f)
             {
                 isSliding = true;
                 isSprinting = false;
