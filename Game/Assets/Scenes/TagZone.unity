@@ -2560,12 +2560,12 @@ PrefabInstance:
     - target: {fileID: 5715332664751846738, guid: d7808e649abac9144b4e70c9bb503d56,
         type: 3}
       propertyPath: m_SlopeLimit
-      value: 5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5715332664751846738, guid: d7808e649abac9144b4e70c9bb503d56,
         type: 3}
       propertyPath: m_StepOffset
-      value: 0.1
+      value: 0.001
       objectReference: {fileID: 0}
     - target: {fileID: 8046696412621918762, guid: d7808e649abac9144b4e70c9bb503d56,
         type: 3}

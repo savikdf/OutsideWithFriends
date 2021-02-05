@@ -67,7 +67,10 @@ public class FirstPersonController : MonoBehaviour
     //inputs
     private bool sprintHit = false;
     private bool isSprinting = false;
-    
+    private bool crouchHitDown, crouchHitUp = false;
+    private bool isCrouch = false;
+    private bool isSliding = false;
+
     #endregion
 
     #region Public Accessors 
@@ -83,7 +86,6 @@ public class FirstPersonController : MonoBehaviour
     private bool canMove = true;  
 
     float forwardInput = 0.0f;
-
     #endregion
 
     public FirstPersonController()
@@ -131,13 +133,9 @@ public class FirstPersonController : MonoBehaviour
         verticalVelocity = boostVec.y;
         boostApplied = true;
     }
-
-    public IEnumerator TrackMove()
-    {
-        while (canMove && charCon != null)
-        {   
-            #region  raycast cluster fuck 凸ಠ益ಠ)凸
-            groundedRays = new List<Ray>() 
+    
+    public List<Ray> CreateGroundRays() {
+        return new List<Ray>() 
             {
                 new Ray(transform.position, -transform.up), //mid
                 new Ray(transform.position + new Vector3(0,0,rayRadius), -transform.up), //N
@@ -149,50 +147,82 @@ public class FirstPersonController : MonoBehaviour
                 new Ray(transform.position + new Vector3(rayRadius,0,0), -transform.up), //W
                 new Ray(transform.position + new Vector3(rayRadius *-1f,0,0), -transform.up) //E
             };
-            Vector3 floorAngle = new Vector3();
+    }
 
-            for(int i = 0; i < groundedRays.Count(); i++)
+    // returns normal of all current ray's
+    // and returns the average of the set
+    public Vector3 GetFloorNormal() {
+        groundedRays = CreateGroundRays();
+
+        Vector3 floorAngle = new Vector3();
+
+        foreach(Ray r in  groundedRays)
+        {
+            RaycastHit hit = new RaycastHit();
+
+            if (Physics.Raycast(r, out hit, charCon.height/2f + .15f, 1, QueryTriggerInteraction.Ignore)) 
             {
-                var r = groundedRays[i];
-
-                RaycastHit hit = new RaycastHit();
-                if (Physics.Raycast(r, out hit, charCon.height/2f + .15f, 1, QueryTriggerInteraction.Ignore)) {
-                    floorAngle += hit.normal;
-                }
+                floorAngle += hit.normal;
             }
-        
-
-            // inverting the normals, for *reasons*
-            floorAngle = floorAngle.normalized * -1;
-            
-            // floorLerp is an attempt to normalize the angles returned from Vector3.Angle
-            // which is returned in degree's and range between 0 - 180 || 90 (i'm not 100% on that yet)
-            float floorLerp = (Vector3.Angle(floorAngle, transform.forward)/90.0f); 
-            
-            // capping the floor angle to 1 for flatties
-            floorLerp = (floorLerp <= 0) ? 1.0f : floorLerp;
-
-            //DebugCol.Log(new Color(1,0,0), (Vector3.Angle(floorAngle, transform.forward)/90.0f).ToString());
-
-            // if the returned angle is lesser (flat surface) carry on with ur day
-            // but > 1.05f normal slope angle means a steeper slope
-            // forward momentum is locked and the player slides Ｏ(≧∇≦)Ｏ
-            if (floorLerp <= 1.05f) 
-            {
-               forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed * (floorLerp * slideForwardSpeed);      
-            } 
-            else 
-            {
-                // returns the max value between current and new input
-                // basically the player can't slow down 
-                float current_forward = Input.GetAxis("Vertical") * currentForwardSpeed * (floorLerp * slideForwardSpeed);
-                forwardInput = Mathf.Max(forwardInput, current_forward);
-            }
-
-            #endregion
-
+        }
+        // inverting the normals, for *reasons*
+        return floorAngle.normalized * -1;
+    } 
+    public IEnumerator TrackMove()
+    {
+        while (canMove && charCon != null)
+        {   
+           
             float strafeInput = Input.GetAxis("Horizontal") * currentStrafeSpeed;
+
             sprintHit = Input.GetKeyDown(KeyCode.LeftShift);
+
+            crouchHitDown = Input.GetKeyDown(KeyCode.LeftControl);
+            crouchHitUp = Input.GetKeyUp(KeyCode.LeftControl);
+
+            Vector3 floorAngle = GetFloorNormal(); 
+
+            #region crouch logic
+                Camera cam = this.GetComponentInChildren<Camera>();
+                float currentCamY = cam.transform.position.y;
+
+                if (!isCrouch && crouchHitDown)
+                {
+                    //begin crouch
+                    isCrouch = true;
+                    cam.transform.position = new Vector3(
+                        cam.transform.position.x,
+                        currentCamY - 1.0f,
+                        cam.transform.position.z
+                    );
+                }
+                else if (isCrouch && crouchHitUp)
+                {
+                    //stop crouch
+                    isCrouch = false;
+                    cam.transform.position = new Vector3(
+                        cam.transform.position.x,
+                        cam.transform.position.y + 1.0f,
+                        cam.transform.position.z
+                    );
+                }
+            #endregion
+            
+            #region slide logic
+            // lock forward motion if crouching
+            if(isCrouch && forwardInput > 0)
+            {
+                isSliding = true;
+                isSprinting = false;
+                DebugCol.Log(new Color(1, 0, 0), "sliding");
+
+                float current_forward = Input.GetAxis("Vertical") * currentForwardSpeed;
+                forwardInput = Mathf.Max(forwardInput, current_forward);
+            } else {
+                 forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed;
+            } 
+            
+            #endregion
 
             #region Sprint Logic
 
@@ -253,17 +283,7 @@ public class FirstPersonController : MonoBehaviour
     {
         while (canMove && charCon != null)
         {
-            groundedRays = new List<Ray>() {
-                new Ray(transform.position, -transform.up), //mid
-                new Ray(transform.position + new Vector3(0,0,rayRadius), -transform.up), //N
-                new Ray(transform.position + new Vector3(rayRadius * Mathf.Cos(Mathf.PI/4),0,rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //NE
-                new Ray(transform.position + new Vector3(-rayRadius * Mathf.Cos(Mathf.PI/4),0,rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //NW
-                new Ray(transform.position + new Vector3(0,0,rayRadius * -1f), -transform.up), //S
-                new Ray(transform.position + new Vector3(rayRadius * Mathf.Cos(Mathf.PI/4),0,-rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //SE
-                new Ray(transform.position + new Vector3(-rayRadius * Mathf.Cos(Mathf.PI/4),0,-rayRadius * Mathf.Sin(Mathf.PI/4)), -transform.up), //SW
-                new Ray(transform.position + new Vector3(rayRadius,0,0), -transform.up), //W
-                new Ray(transform.position + new Vector3(rayRadius *-1f,0,0), -transform.up) //E
-            };
+            groundedRays = CreateGroundRays();
             
             bool isGrounded = groundedRays.Any(r => {
                 RaycastHit hit = new RaycastHit();
