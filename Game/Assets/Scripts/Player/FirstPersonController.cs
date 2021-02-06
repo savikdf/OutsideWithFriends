@@ -180,46 +180,48 @@ public class FirstPersonController : MonoBehaviour
             crouchHitDown = Input.GetKeyDown(KeyCode.LeftControl);
             crouchHitUp = Input.GetKeyUp(KeyCode.LeftControl);
 
-            float floorLerp = (Vector3.Angle(GetFloorNormal(), transform.forward)/90.0f); 
-            floorLerp = (floorLerp <= 0) ? 1.0f : floorLerp;
-            movementVec.z *= floorLerp * 3.0f;
-
             #region crouch logic
-                Camera cam = this.GetComponentInChildren<Camera>();
-                float currentCamY = cam.transform.position.y;
+            Camera cam = this.GetComponentInChildren<Camera>();
+            float currentCamY = cam.transform.position.y;
 
-                if (!isCrouch && crouchHitDown)
-                {
-                    //begin crouch
-                    isCrouch = true;
-                    cam.transform.position = new Vector3(
-                        cam.transform.position.x,
-                        currentCamY - 1.0f,
-                        cam.transform.position.z
-                    );
-                }
-                else if (isCrouch && crouchHitUp)
-                {
-                    //stop crouch
-                    isCrouch = false;
-                    cam.transform.position = new Vector3(
-                        cam.transform.position.x,
-                        cam.transform.position.y + 1.0f,
-                        cam.transform.position.z
-                    );
-                }
+            if (!isCrouch && crouchHitDown)
+            {
+                //begin crouch
+                isCrouch = true;
+                cam.transform.position = new Vector3(
+                    cam.transform.position.x,
+                    currentCamY - 1.0f,
+                    cam.transform.position.z
+                );
+            }
+            else if (isCrouch && crouchHitUp)
+            {
+                //stop crouch
+                isCrouch = false;
+                cam.transform.position = new Vector3(
+                    cam.transform.position.x,
+                    cam.transform.position.y + 1.0f,
+                    cam.transform.position.z
+                );
+            }
             #endregion
             
             #region slide logic
+
+            float floorLerp = (Vector3.Angle(GetFloorNormal(), transform.forward)/90.0f); 
+            floorLerp = Mathf.Clamp(floorLerp, 0, 1.015f);
+            DebugCol.Log(new Color(0, 0.5f, 0), floorLerp.ToString());
+
             // lock forward motion if crouching
-            if(isCrouch && movementVec.z > 5.0f)
+            if(isCrouch && forwardInput > 4.0f)
             {
                 isSliding = true;
                 isSprinting = false;
-                DebugCol.Log(new Color(1, 0, 0), "sliding");
+                //DebugCol.Log(new Color(1, 0, 0), "sliding");
 
                 float current_forward = Input.GetAxis("Vertical") * currentForwardSpeed;
-                forwardInput = Mathf.Max(forwardInput, current_forward);
+                forwardInput = Mathf.Max(forwardInput, current_forward) * floorLerp;
+                forwardInput *= 0.984f; // friction
             } else {
                  forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed;
             } 
@@ -255,6 +257,7 @@ public class FirstPersonController : MonoBehaviour
                 isSprinting = true;
                 sprintTimer += Time.deltaTime;
                 sprintChargeTimer = 0f;
+
                 forwardInput *= sprintSpeedModifier;
             }
             if (!isSprinting || sprintTimer > sprintTimeMax)
