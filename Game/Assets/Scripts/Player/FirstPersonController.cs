@@ -223,7 +223,8 @@ public class FirstPersonController : MonoBehaviour
                 forwardInput = Mathf.Max(forwardInput, current_forward) * floorLerp;
                 forwardInput *= 0.984f; // friction
             } else {
-                 forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed;
+                isSliding = false; 
+                forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed;
             } 
             
             #endregion
