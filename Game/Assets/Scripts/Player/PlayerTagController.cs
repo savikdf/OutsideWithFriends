@@ -15,7 +15,7 @@ public class PlayerTagController : MonoBehaviour {
     void Awake(){
         audioController = GetComponent<PlayerAudioController>();
         StartCoroutine(HandleInput());
-        input = GameManger.gameManger.InputManager;
+        input = GameManger.singleton.InputManager;
     }
     IEnumerator HandleInput(){
         while(true){

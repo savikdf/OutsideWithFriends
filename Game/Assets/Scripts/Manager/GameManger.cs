@@ -6,28 +6,34 @@ using UnityEngine.SceneManagement;
 
 public class GameManger : MonoBehaviour, IManager
 {
-    public static GameManger gameManger;
+    public static GameManger singleton;
     public static IResourceLoader resourceLoader;
     public bool isDebug;
-    private ISpawnManager spawnManager;
+    [HideInInspector] public ISpawnManager spawnManager;
     private IInputManager inputManager;
     private List<IManager> managers = new List<IManager>();
     public IInputManager InputManager{get{return this.inputManager;} set{}}
-    public GameManger() : this(new ResourceLoader(), new SpawnManager(), new InputManager()) { }
+    public GameManger() : this(new ResourceLoader(), new InputManager()) { }
 
-    public GameManger(IResourceLoader newResourceLoader, ISpawnManager newSpawnManager, InputManager newInputManager)
+    public GameManger(IResourceLoader newResourceLoader, InputManager newInputManager)
     {
-        gameManger = this;
+        singleton = singleton == null? this: singleton;
+        
         resourceLoader = newResourceLoader;
-        this.spawnManager = newSpawnManager;
         this.inputManager = newInputManager;
+        this.spawnManager = null; //set by the network
     }
 
     private void Awake()
     {
-        managers.Add(spawnManager);
+        if (singleton != this)
+        {
+            Destroy(this);
+        }
         managers.Add(inputManager);
-        Initialize();        
+        Initialize();
+
+        DontDestroyOnLoad(this.gameObject);
     }
     public bool Initialize()
     {
@@ -44,6 +50,7 @@ public class GameManger : MonoBehaviour, IManager
     public IEnumerator Routine(){
         yield return null;
     }
+
     private IEnumerator DetectDebugInputs() {
         while (isDebug) {
             if (Input.GetKeyDown(KeyCode.Delete)) {

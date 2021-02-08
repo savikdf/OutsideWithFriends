@@ -9,15 +9,17 @@ using UnityEngine.SceneManagement;
 public class NetworkManagerLobby : NetworkManager
 {
     [SerializeField] private int minPlayers = 1;
-    [Scene] [SerializeField] private string menuScene = "MainMenu";
+    [Scene] [SerializeField] private string menuSceneName = "MainMenu";
 
     [Header("Room")]
     [SerializeField] private NetworkRoomPlayerLobby roomPlayerPrefab = null;
     public List<NetworkRoomPlayerLobby> RoomPlayers { get; } = new List<NetworkRoomPlayerLobby>();
 
     [Header("Game")]
+    public Action<string> OnSceneChanged;
     [SerializeField] private NetworkGamePlayerLobby gamePlayerPrefab = null;
     public List<NetworkGamePlayerLobby> GamePlayers { get; } = new List<NetworkGamePlayerLobby>();
+    public GameObject spawnManagerObject = null;
 
     private bool IsAllPlayersReady
     {
@@ -29,6 +31,7 @@ public class NetworkManagerLobby : NetworkManager
 
     public static event Action OnClientConnected;
     public static event Action OnClientDisconnected;
+    public static event Action<NetworkConnection> OnServerReadied;
 
     public override void OnStartServer() => spawnPrefabs = Resources.LoadAll<GameObject>(ResourcePaths.SpawnablePrefabsPath).ToList();
 
@@ -82,7 +85,7 @@ public class NetworkManagerLobby : NetworkManager
         if (conn.identity != null)
         {
             NetworkRoomPlayerLobby player = conn.identity.GetComponent<NetworkRoomPlayerLobby>();
-            RoomPlayers.Remove(player);
+             RoomPlayers.Remove(player);
 
             NotifyPlayersOfReadyState();
         }
@@ -111,10 +114,11 @@ public class NetworkManagerLobby : NetworkManager
             ServerChangeScene("Level_Woods"); //only one level for now
         }
     }
-
+        
     public override void OnServerChangeScene(string newSceneName)
     {
-        if (SceneManager.GetActiveScene().name == menuScene && newSceneName.StartsWith("Level_"))
+        string temp = SceneManager.GetActiveScene().name;
+        if (SceneManager.GetActiveScene().name.Contains(menuSceneName) && newSceneName.StartsWith("Level_"))
         {
             for (int i = 0; i < RoomPlayers.Count; i++)
             {
@@ -129,7 +133,22 @@ public class NetworkManagerLobby : NetworkManager
             }
             base.OnServerChangeScene(newSceneName);
         }
+    }
 
+    public override void OnServerReady(NetworkConnection conn)
+    {
+        base.OnServerReady(conn);
+        OnServerReadied?.Invoke(conn);
+    }
 
+    public override void OnServerSceneChanged(string sceneName)
+    {
+        if (sceneName.StartsWith("Level_"))
+        {
+            GameObject spawner = Instantiate(spawnManagerObject);
+            NetworkServer.Spawn(spawner);
+            GameManger.singleton.spawnManager = spawner.GetComponent<ISpawnManager>();
+        }
+        base.OnServerSceneChanged(sceneName);
     }
 }

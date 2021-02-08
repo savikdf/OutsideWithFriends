@@ -2567,6 +2567,11 @@ PrefabInstance:
       propertyPath: m_StepOffset
       value: 0.001
       objectReference: {fileID: 0}
+    - target: {fileID: 6638179651203459413, guid: d7808e649abac9144b4e70c9bb503d56,
+        type: 3}
+      propertyPath: sceneId
+      value: 2295464373
+      objectReference: {fileID: 0}
     - target: {fileID: 8046696412621918762, guid: d7808e649abac9144b4e70c9bb503d56,
         type: 3}
       propertyPath: m_Name
@@ -3222,7 +3227,7 @@ Transform:
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1250175834
 PrefabInstance:

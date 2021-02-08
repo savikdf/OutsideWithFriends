@@ -1,26 +1,35 @@
-﻿using System;
+﻿using Mirror;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Utils;
-public class SpawnManager : MonoBehaviour, IManager, ISpawnManager
+public class SpawnManager : NetworkBehaviour, IManager, ISpawnManager
 {
-    private GameObject player;
-    public GameObject Player { 
+    private bool isInitialized = false;
+    private GameObject playerPreFab;
+    public GameObject PlayerPreFab { 
         get{
-            if(player == null)
+            if(playerPreFab == null)
             {
-                player = (GameObject)GameManger.resourceLoader.LoadResourceObject(ResourcePaths.PlayerPrefabPath);
+                playerPreFab = (GameObject)GameManger.resourceLoader.LoadResourceObject(ResourcePaths.PlayerPrefabPath);
             }
-            return player;
+            return playerPreFab;
         }
         set { 
-            player = value; 
+            playerPreFab = value; 
         } 
     }
 
+    private int spawnedIndex;
     private Spawn spawn;
+
+    public void Awake()
+    {
+        if(!isInitialized)
+            Initialize();
+    }
 
     public bool Initialize()
     {
@@ -31,21 +40,36 @@ public class SpawnManager : MonoBehaviour, IManager, ISpawnManager
         playersInScene?.ForEach(p => Destroy(p.gameObject));
 
         spawn = FindObjectOfType<Spawn>();
-        GameObject temp = Player;
-        SpawnPlayer(0);
+        GameObject temp = PlayerPreFab;
 
+        isInitialized = true;
         return true;
-    }
-
-    public void SpawnPlayer(int index)
-    {
-        GameObject newPlayer = GameObject.Instantiate(Player, spawn.randomSpawnPoint, Quaternion.identity);
-        newPlayer.name = $"Player{index}";
-    }
+    }   
 
     public IEnumerator Routine(){
         Debug.Log("Running Spawn Routine");
         yield return null;
     }
+
+    public override void OnStartServer() => NetworkManagerLobby.OnServerReadied += SpawnPlayer;
+    [ServerCallback]
+    public void OnDestroy() => NetworkManagerLobby.OnServerReadied -= SpawnPlayer;
+
+    [Server]
+    public void SpawnPlayer(NetworkConnection conn)
+    {
+        if (spawn == null)
+        {
+            Debug.LogError("Spawnpoint must be set up in the Scene before attempting to spawn Players");
+            return;
+        }
+
+        GameObject newPlayer = GameObject.Instantiate(PlayerPreFab, spawn.SpacedCircularSpawnPoint(spawnedIndex), Quaternion.identity);
+        newPlayer.name = $"Player {spawnedIndex}";
+
+        NetworkServer.Spawn(newPlayer, conn);
+        spawnedIndex++;
+    }
+
 
 }
