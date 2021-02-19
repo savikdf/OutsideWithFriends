@@ -24,21 +24,27 @@ public class MenuManager : MonoBehaviour, IManager
 
     public void Awake()
     {
-        networkLobbyManager = GetComponent<NetworkManagerLobby>();
-        menuCodeBehinds = FindObjectsOfType<MonoBehaviour>().OfType<IMenuCodeBehind>().ToList();
-        if (menuCodeBehinds.GroupBy(m => m.MenuIndex).Any(g => g.Count() > 1)) {
-            Debug.LogError("Menu's with the same index exist. Fix or transition errors will occur");
-        }
-        lobbyCodeBehind = (LobbyMenuCodeBehind)menuCodeBehinds.FirstOrDefault(cb => cb.GetType() == typeof(LobbyMenuCodeBehind));
-        if (lobbyCodeBehind == null)
+        if (SceneManager.GetActiveScene().name.Contains("Menu"))
         {
-            Debug.LogError("No Lobby Codebehind detected");
+            networkLobbyManager = GetComponent<NetworkManagerLobby>();
+            menuCodeBehinds = FindObjectsOfType<MonoBehaviour>().OfType<IMenuCodeBehind>().ToList();
+            if (menuCodeBehinds.GroupBy(m => m.MenuIndex).Any(g => g.Count() > 1))
+            {
+                Debug.LogError("Menu's with the same index exist. Fix or transition errors will occur");
+            }
+            lobbyCodeBehind = (LobbyMenuCodeBehind)menuCodeBehinds.FirstOrDefault(cb => cb.GetType() == typeof(LobbyMenuCodeBehind));
+            if (lobbyCodeBehind == null)
+            {
+                Debug.LogError("No Lobby Codebehind detected");
+            }
+            Initialize();
         }
-        Initialize();
+        
     }
 
     public void Start() {
-        TransitionMenus(-1);
+        if (SceneManager.GetActiveScene().name.Contains("Menu"))
+            TransitionMenus(-1);
     }
 
     #region Multiplayer

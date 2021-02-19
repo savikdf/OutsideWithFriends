@@ -14,6 +14,8 @@ GameObject:
   - component: {fileID: 837244884182189984}
   - component: {fileID: 837244884182189982}
   - component: {fileID: 837244884182189985}
+  - component: {fileID: 9097206214567631817}
+  - component: {fileID: 8061607770389005454}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -109,7 +111,7 @@ MonoBehaviour:
   - {fileID: 6250632378235027936, guid: ba3332c7859483246a444c500b795f78, type: 3}
   - {fileID: 6250632378235027936, guid: aaf1c60021738d444a8c43dc239bc160, type: 3}
   minPlayers: 1
-  menuScene: Assets/Scenes/MainMenu.unity
+  menuSceneName: Assets/Scenes/MainMenu.unity
   roomPlayerPrefab: {fileID: 6250632378235027933, guid: ba3332c7859483246a444c500b795f78,
     type: 3}
   gamePlayerPrefab: {fileID: 7412246242948784762, guid: aaf1c60021738d444a8c43dc239bc160,
@@ -160,3 +162,33 @@ MonoBehaviour:
   SendWindowSize: 128
   ReceiveWindowSize: 128
   debugGUI: 0
+--- !u!114 &9097206214567631817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 837244884182189986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneId: 0
+  serverOnly: 0
+  m_AssetId: 
+  hasSpawned: 0
+--- !u!114 &8061607770389005454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 837244884182189986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d63d12c5beaf3c428399e3fa1f23a85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1

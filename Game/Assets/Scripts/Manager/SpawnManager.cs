@@ -37,10 +37,13 @@ public class SpawnManager : NetworkBehaviour, IManager, ISpawnManager
 
         //wipe all existing players for a fresh spawn
         List<Player> playersInScene = FindObjectsOfType<Player>().ToList();
+        Debug.Log($"destroying {playersInScene.Count} players");
         playersInScene?.ForEach(p => Destroy(p.gameObject));
 
         spawn = FindObjectOfType<Spawn>();
         GameObject temp = PlayerPreFab;
+
+        LocalSpawnPlayer();
 
         isInitialized = true;
         return true;
@@ -51,12 +54,12 @@ public class SpawnManager : NetworkBehaviour, IManager, ISpawnManager
         yield return null;
     }
 
-    public override void OnStartServer() => NetworkManagerLobby.OnServerReadied += SpawnPlayer;
+    public override void OnStartServer() => NetworkManagerLobby.OnServerReadied += ServerSpawnPlayer;
     [ServerCallback]
-    public void OnDestroy() => NetworkManagerLobby.OnServerReadied -= SpawnPlayer;
+    public void OnDestroy() => NetworkManagerLobby.OnServerReadied -= ServerSpawnPlayer;
 
     [Server]
-    public void SpawnPlayer(NetworkConnection conn)
+    public void ServerSpawnPlayer(NetworkConnection conn)
     {
         if (spawn == null)
         {
@@ -66,8 +69,24 @@ public class SpawnManager : NetworkBehaviour, IManager, ISpawnManager
 
         GameObject newPlayer = GameObject.Instantiate(PlayerPreFab, spawn.SpacedCircularSpawnPoint(spawnedIndex), Quaternion.identity);
         newPlayer.name = $"Player {spawnedIndex}";
+        if(conn != null)
+        {
+            NetworkServer.Spawn(newPlayer, conn);
+        }
+        spawnedIndex++;
+    }
 
-        NetworkServer.Spawn(newPlayer, conn);
+    
+    public void LocalSpawnPlayer()
+    {
+        if (spawn == null)
+        {
+            Debug.LogError("Spawnpoint must be set up in the Scene before attempting to spawn Players");
+            return;
+        }
+
+        GameObject newPlayer = GameObject.Instantiate(PlayerPreFab, spawn.SpacedCircularSpawnPoint(spawnedIndex), Quaternion.identity);
+        newPlayer.name = $"Player {spawnedIndex}";       
         spawnedIndex++;
     }
 

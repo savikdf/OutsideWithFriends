@@ -7,5 +7,7 @@ public interface ISpawnManager : IManager
 {
     GameObject PlayerPreFab { get; set; }
 
-    void SpawnPlayer(NetworkConnection conn);
+    void ServerSpawnPlayer(NetworkConnection conn);
+    void LocalSpawnPlayer();
+
 }
