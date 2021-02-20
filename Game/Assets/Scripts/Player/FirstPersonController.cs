@@ -171,8 +171,7 @@ public class FirstPersonController : MonoBehaviour
     public IEnumerator TrackMove()
     {
         while (canMove && charCon != null)
-        {   
-           
+        {  
             float strafeInput = Input.GetAxis("Horizontal") * currentStrafeSpeed;
 
             sprintHit = Input.GetKeyDown(KeyCode.LeftShift);
@@ -208,12 +207,18 @@ public class FirstPersonController : MonoBehaviour
             
             #region slide logic
 
+            // normalize the angle between player and the floor, where the angle returned
+            // is in the range -90 => 0 => 90, 
+            //      
+            //  __|__ in terms of unit circle example, it is divided into the 4 quads 
+            //    |
             float floorLerp = (Vector3.Angle(GetFloorNormal(), transform.forward)/90.0f); 
+            
             floorLerp = Mathf.Clamp(floorLerp, 0, 1.015f);
-            DebugCol.Log(new Color(0, 0.5f, 0), floorLerp.ToString());
+            // DebugCol.Log(new Color(0, 0.5f, 0), floorLerp.ToString());
 
             // lock forward motion if crouching
-            if(isCrouch && forwardInput > 4.0f)
+            if(isCrouch && movementVec.magnitude > 6.0f) 
             {
                 isSliding = true;
                 isSprinting = false;
@@ -313,6 +318,7 @@ public class FirstPersonController : MonoBehaviour
                     verticalVelocity = jumpSpeed;
                     audioController.PlayPlayerClip(PlayerAudioClips.Jump);
                 }
+                verticalVelocity = 0;
             }
             yield return null;
         }
