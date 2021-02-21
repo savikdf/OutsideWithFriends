@@ -72,7 +72,9 @@ public class FirstPersonController : MonoBehaviour
     private bool isSprinting = false;
     private bool crouchHitDown, crouchHitUp = false;
     private bool isCrouch = false;
-    private bool isSliding = false;
+    private bool isSlide = false;
+    private bool isAllowedToSlide = false;
+    private bool slideLockedCrouch = false;
 
     #endregion
 
@@ -187,26 +189,40 @@ public class FirstPersonController : MonoBehaviour
             Camera cam = this.GetComponentInChildren<Camera>();
             float currentCamY = cam.transform.position.y;
 
-            if (!isCrouch && crouchHitDown)
+            Vector3 moveVecCapture = movementVec;
+            moveVecCapture.y -= verticalVelocityCapture;
+            //DebugCol.Log(new Color(0, 0.5f, 0), moveVecCapture.ToString());
+
+            if (!isAllowedToSlide)
             {
-                //begin crouch
-                isCrouch = true;
-                cam.transform.position = new Vector3(
-                    cam.transform.position.x,
-                    currentCamY - 1.0f,
-                    cam.transform.position.z
-                );
+                if (!isCrouch && crouchHitDown)
+                {
+                    //begin crouch
+   
+                    isCrouch = true;
+                    cam.transform.position = new Vector3(
+                        cam.transform.position.x,
+                        currentCamY - 1.0f,
+                        cam.transform.position.z
+                    );
+                    isAllowedToSlide =  moveVecCapture.magnitude > 6.0f;
+                }
+                else if (isCrouch && isSlide)
+                {
+                    // hold's crouch until sliding exits
+                    slideLockedCrouch = true;
+                }
+                else if (isCrouch && crouchHitUp)
+                {
+                    isCrouch = false;
+                    cam.transform.position = new Vector3(
+                        cam.transform.position.x,
+                        cam.transform.position.y + 1.0f,
+                        cam.transform.position.z
+                    );
+                }
             }
-            else if (isCrouch && crouchHitUp)
-            {
-                //stop crouch
-                isCrouch = false;
-                cam.transform.position = new Vector3(
-                    cam.transform.position.x,
-                    cam.transform.position.y + 1.0f,
-                    cam.transform.position.z
-                );
-            }
+
             #endregion
             
             #region slide logic
@@ -221,22 +237,35 @@ public class FirstPersonController : MonoBehaviour
             floorLerp = Mathf.Clamp(floorLerp, 0, 1.015f);
             // DebugCol.Log(new Color(0, 0.5f, 0), floorLerp.ToString());
 
-            Vector3 moveVecCapture = movementVec;
-            moveVecCapture.y -= verticalVelocityCapture;
-            DebugCol.Log(new Color(0, 0.5f, 0), moveVecCapture.ToString());
-            
-            // lock forward motion if crouching
-            if(isCrouch && moveVecCapture.magnitude > 6.0f) 
+            // lock forward motion if crouching + left-shift | sliding
+            if(isAllowedToSlide) 
             {
-                isSliding = true;
+                isSlide = true;
                 isSprinting = false;
                 //DebugCol.Log(new Color(1, 0, 0), "sliding");
 
                 float current_forward = Input.GetAxis("Vertical") * currentForwardSpeed;
                 forwardInput = Mathf.Max(forwardInput, current_forward) * floorLerp;
                 forwardInput *= 0.984f; // friction
+                
+                isAllowedToSlide =  moveVecCapture.magnitude > 6.0f;
+
             } else {
-                isSliding = false; 
+                // normal forward
+                isSlide = false; 
+                // handle's un crouching when player magnitude is below a 
+                // certian threshold
+                if (slideLockedCrouch) {
+                    //stop crouch
+                    isCrouch = false;
+                    slideLockedCrouch = false;
+                    cam.transform.position = new Vector3(
+                        cam.transform.position.x,
+                        cam.transform.position.y + 1.0f,
+                        cam.transform.position.z
+                    );
+                }
+
                 forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed;
             } 
             
@@ -310,6 +339,7 @@ public class FirstPersonController : MonoBehaviour
             });
 
             //Gravity            
+            // TODO: Handle case where velocity isn't reset on grounded
             if (!isGrounded)
             {
                 airbornTime = Time.deltaTime;
