@@ -29,6 +29,9 @@ public class FirstPersonController : MonoBehaviour
 
     [HideInInspector]
     public float verticalVelocity = 0;
+    // capturing final velocity in grounded state
+    private float verticalVelocityCapture = 0;
+
     [HideInInspector]
     public bool boostApplied = false;
     private float boostTimer = 0f;
@@ -172,6 +175,7 @@ public class FirstPersonController : MonoBehaviour
     {
         while (canMove && charCon != null)
         {  
+            
             float strafeInput = Input.GetAxis("Horizontal") * currentStrafeSpeed;
 
             sprintHit = Input.GetKeyDown(KeyCode.LeftShift);
@@ -217,8 +221,12 @@ public class FirstPersonController : MonoBehaviour
             floorLerp = Mathf.Clamp(floorLerp, 0, 1.015f);
             // DebugCol.Log(new Color(0, 0.5f, 0), floorLerp.ToString());
 
+            Vector3 moveVecCapture = movementVec;
+            moveVecCapture.y -= verticalVelocityCapture;
+            DebugCol.Log(new Color(0, 0.5f, 0), moveVecCapture.ToString());
+            
             // lock forward motion if crouching
-            if(isCrouch && movementVec.magnitude > 6.0f) 
+            if(isCrouch && moveVecCapture.magnitude > 6.0f) 
             {
                 isSliding = true;
                 isSprinting = false;
@@ -298,7 +306,7 @@ public class FirstPersonController : MonoBehaviour
             
             bool isGrounded = groundedRays.Any(r => {
                 RaycastHit hit = new RaycastHit();
-                return Physics.Raycast(r, out hit, charCon.height/2f + .15f, 1, QueryTriggerInteraction.Ignore);
+                return Physics.Raycast(r, out hit, (charCon.height/2f) + 0.15f, 1, QueryTriggerInteraction.Ignore);
             });
 
             //Gravity            
@@ -310,6 +318,7 @@ public class FirstPersonController : MonoBehaviour
             }
             else if (isGrounded)
             {
+                verticalVelocityCapture = verticalVelocity;
                 currentStrafeSpeed = originalStrafeSpeed;
                 airbornTime = 0f;
                 //Jump Check                
@@ -317,8 +326,7 @@ public class FirstPersonController : MonoBehaviour
                 {
                     verticalVelocity = jumpSpeed;
                     audioController.PlayPlayerClip(PlayerAudioClips.Jump);
-                }
-                verticalVelocity = 0;
+                } 
             }
             yield return null;
         }
