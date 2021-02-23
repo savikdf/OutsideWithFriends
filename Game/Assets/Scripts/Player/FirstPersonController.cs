@@ -25,6 +25,7 @@ public class FirstPersonController : MonoBehaviour
     private float slideForwardSpeed = 3.2f;
     private CharacterController charCon;
     private PlayerAudioController audioController;
+    private PlayerParticleController particleController;
     private PlayerUIController uiController;
 
     [HideInInspector]
@@ -35,7 +36,8 @@ public class FirstPersonController : MonoBehaviour
     [HideInInspector]
     public bool boostApplied = false;
     private float boostTimer = 0f;
-    private Vector3 movementVec;
+    private Vector3 movementVec, slideMovementVec;
+    private float magnitudeSnapShot = 0.0f;
     private Camera camera;
 
     #region Camera Variables
@@ -101,6 +103,7 @@ public class FirstPersonController : MonoBehaviour
     {
         charCon = GetComponent<CharacterController>();
         audioController = GetComponent<PlayerAudioController>();
+        particleController = GetComponent<PlayerParticleController>();
         uiController = GetComponent<PlayerUIController>();
         camera = GetComponentInChildren<Camera>();
     }
@@ -177,8 +180,8 @@ public class FirstPersonController : MonoBehaviour
     {
         while (canMove && charCon != null)
         {  
-            
             float strafeInput = Input.GetAxis("Horizontal") * currentStrafeSpeed;
+            forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed;
 
             sprintHit = Input.GetKeyDown(KeyCode.LeftShift);
 
@@ -198,14 +201,17 @@ public class FirstPersonController : MonoBehaviour
                 if (!isCrouch && crouchHitDown)
                 {
                     //begin crouch
-   
                     isCrouch = true;
                     cam.transform.position = new Vector3(
                         cam.transform.position.x,
                         currentCamY - 1.0f,
                         cam.transform.position.z
                     );
-                    isAllowedToSlide =  moveVecCapture.magnitude > 6.0f;
+                    if (moveVecCapture.magnitude > 1.0f) {
+                        magnitudeSnapShot = moveVecCapture.magnitude;
+                        isAllowedToSlide = true;
+                    }
+                    DebugCol.Log(new Color(1,0,0), moveVecCapture.magnitude.ToString());
                 }
                 else if (isCrouch && isSlide)
                 {
@@ -234,7 +240,7 @@ public class FirstPersonController : MonoBehaviour
             //    |
             float floorLerp = (Vector3.Angle(GetFloorNormal(), transform.forward)/90.0f); 
             
-            floorLerp = Mathf.Clamp(floorLerp, 0, 1.015f);
+            //floorLerp = Mathf.Clamp(floorLerp, 0, 1.015f);
             // DebugCol.Log(new Color(0, 0.5f, 0), floorLerp.ToString());
 
             // lock forward motion if crouching + left-shift | sliding
@@ -245,11 +251,18 @@ public class FirstPersonController : MonoBehaviour
                 //DebugCol.Log(new Color(1, 0, 0), "sliding");
 
                 float current_forward = Input.GetAxis("Vertical") * currentForwardSpeed;
-                forwardInput = Mathf.Max(forwardInput, current_forward) * floorLerp;
-                forwardInput *= 0.984f; // friction
-                
-                isAllowedToSlide =  moveVecCapture.magnitude > 6.0f;
+                current_forward = Mathf.Max(forwardInput, current_forward) * floorLerp;
+                Vector3 dir = moveVecCapture.normalized;
 
+                slideMovementVec = new Vector3(
+                dir.x, 
+                0, 
+                dir.z) * floorLerp * magnitudeSnapShot;
+
+                //DebugCol.Log(new Color(0, 1, 0), slideMovementVec.ToString());
+                //DebugCol.Log(new Color(0, 1, 1), slideMovementVec.magnitude.ToString());
+                particleController.FireParticle();
+                isAllowedToSlide =  slideMovementVec.magnitude > magnitudeSnapShot + 0.1f;
             } else {
                 // normal forward
                 isSlide = false; 
@@ -265,8 +278,9 @@ public class FirstPersonController : MonoBehaviour
                         cam.transform.position.z
                     );
                 }
-
-                forwardInput = Input.GetAxis("Vertical") * currentForwardSpeed;
+                 particleController.StopParticle();
+                slideMovementVec = new Vector3(0, 0, 0);
+                magnitudeSnapShot = 0.0f;
             } 
             
             #endregion
@@ -320,7 +334,7 @@ public class FirstPersonController : MonoBehaviour
 
             #endregion
 
-            movementVec = new Vector3(strafeInput, verticalVelocity, forwardInput);
+            movementVec = new Vector3(strafeInput, verticalVelocity, forwardInput) + slideMovementVec;
             
             //charCon.Move(movementVec * Time.deltaTime);
             yield return null;
